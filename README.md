@@ -42,61 +42,69 @@ It demonstrates **systems-level engineering**, focusing on **speed, concurrency,
 
 ## NovaDB Architecture Overview
 
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
 +-----------------------------------------------------------+
 |                       NovaDB.Server                       |
-|-----------------------------------------------------------|
++-----------------------------------------------------------+
 | - Entry point (Program.cs)                                |
 | - Dependency Injection setup                               |
-| - Configuration loading (NovaConfig.cs)                  |
-| - Lifecycle management (startup/shutdown hooks)          |
+| - Configuration loading (NovaConfig.cs)                    |
+| - Lifecycle management (startup/shutdown hooks)            |
 +-----------------------------------------------------------+
-                                |
-                                ▼
+                             |
+                             ▼
 +-----------------------------------------------------------+
 |                     Command Layer                          |
-|-----------------------------------------------------------|
-| - Command Dispatcher                                      |
-|   Maps command strings (SET, GET, DEL, etc.) → Handlers  |
-| - Built-in Command Handlers                                |
-|   SET, GET, DEL, EXPIRE, TTL, INFO, FLUSHDB              |
-| - Extensible interface for custom commands               |
-| - Performs validation, TTL checks, and command routing   |
 +-----------------------------------------------------------+
-                                |
-                                ▼
+| - Command Dispatcher                                       |
+|     Maps command strings (SET, GET, DEL, etc.) → Handlers |
+|                                                            |
+| - Built-in Command Handlers                                |
+|     SET, GET, DEL, EXPIRE, TTL, INFO, FLUSHDB              |
+|                                                            |
+| - Extensible interface for custom commands                 |
+| - Performs validation, TTL checks, and command routing     |
++-----------------------------------------------------------+
+                             |
+                             ▼
 +-----------------------------------------------------------+
 |                    Storage Engine                          |
-|-----------------------------------------------------------|
-| - In-Memory Key-Value Store                                |
-|   - Sharded store for concurrency                          |
-|   - Thread-safe access via partition locks or RW locks     |
-|   - TTL/Expiration management                               |
-| - Data Structures                                         |
-|   - Hash tables / Dictionaries                             |
-|   - CacheEntry / ExpirationRecord                           |
-| - Persistence Layer                                        |
-|   - Append-Only File (AOF) writer & reader                 |
-|   - Snapshotting (RDB-style)                               |
-|   - Background persistence manager                          |
-| - APIs exposed to Command Layer                             |
-|   - Set/Get/Del/Expire/Scan/Flush                          |
 +-----------------------------------------------------------+
-                                |
-                                ▼
+| - In-Memory Key-Value Store                                |
+|     • Sharded store for concurrency                        |
+|     • Thread-safe access (partition/RW locks)              |
+|     • TTL/Expiration management                            |
+|                                                            |
+| - Data Structures                                          |
+|     • Hash tables / Dictionaries                           |
+|     • CacheEntry / ExpirationRecord                        |
+|                                                            |
+| - Persistence Layer                                        |
+|     • Append-Only File (AOF) writer & reader               |
+|     • Snapshotting (RDB-style)                             |
+|     • Background persistence manager                       |
+|                                                            |
+| - APIs exposed to Command Layer                            |
+|     Set / Get / Del / Expire / Scan / Flush               |
++-----------------------------------------------------------+
+                             |
+                             ▼
 +-----------------------------------------------------------+
 |                 Protocol + Network Layer                   |
-|-----------------------------------------------------------|
-| - TCP Server (async)                                      |
-|   - Accepts multiple concurrent client connections       |
-|   - Handles connection lifecycle                           |
-| - RESP-inspired Protocol Parser                             |
-|   - Parses incoming bytes into commands                   |
-|   - Writes responses (bulk strings, errors, integers)     |
-| - Connection Management                                     |
-|   - Tracks client state, authentication (optional)         |
-| - Network I/O abstractions (System.IO.Pipelines / Sockets)|
-| - Provides decoded commands to Command Layer               |
 +-----------------------------------------------------------+
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| - TCP Server (async)                                       |
+|     • Accepts multiple concurrent client connections       |
+|     • Handles connection lifecycle                         |
+|                                                            |
+| - RESP-Inspired Protocol Parser                            |
+|     • Parses raw bytes into structured commands            |
+|     • Writes responses (bulk strings, ints, errors)        |
+|                                                            |
+| - Connection Management                                    |
+|     • Tracks client state                                  |
+|     • Authentication support (optional)                    |
+|                                                            |
+| - Network I/O Abstractions                                 |
+|     • System.IO.Pipelines or raw sockets                   |
+|                                                            |
+| - Outputs decoded commands to Command Layer                |
++-----------------------------------------------------------+
